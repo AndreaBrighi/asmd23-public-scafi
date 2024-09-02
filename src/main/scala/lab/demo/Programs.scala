@@ -2,17 +2,17 @@ package lab.demo
 
 import it.unibo.scafi.incarnations.BasicAbstractIncarnation
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ExportEvaluation.EXPORT_EVALUATION
+import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ScafiWorldIncarnation.EXPORT
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.{ScafiSimulationInitializer, SimulationInfo}
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.configuration.{ScafiProgramBuilder, ScafiWorldInformation}
 import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.world.ScafiWorldInitializer.Random
-import it.unibo.scafi.simulation.s2.frontend.incarnation.scafi.bridge.ScafiWorldIncarnation.EXPORT
 import it.unibo.scafi.simulation.s2.frontend.view.{ViewSetting, WindowConfiguration}
 import it.unibo.scafi.space.graphics2D.BasicShape2D.Circle
 
-import scala.reflect._
+import scala.reflect.*
 
 object Incarnation extends BasicAbstractIncarnation with BuildingBlocks
-import lab.demo.Incarnation._ //import all stuff from an incarnation
+import lab.demo.Incarnation.* //import all stuff from an incarnation
 
 trait Simulation[R: ClassTag] extends App:
   val formatter_evaluation: EXPORT_EVALUATION[Any] = (e: EXPORT) => formatter(e.root[Any]())
@@ -148,11 +148,11 @@ object Demo12 extends Simulation[Main12]
 
 class Main12id extends AggregateProgramSkeleton:
 
-  import Builtins.Bounded.of_i
-
-  override def main() = foldhood(Set())(_ ++ _){Set(nbr {
-    mid()
-  })}
+  override def main() = foldhood(Set())(_ ++ _) {
+    Set(nbr {
+      mid()
+    })
+  }
 
 object Demo12id extends Simulation[Main12id]
 
@@ -182,7 +182,7 @@ class Main14gossip extends AggregateProgramSkeleton:
   import Builtins.Bounded.of_i
 
   override def main() = rep(0) { x =>
-    boolToInt(sense1) max maxHoodPlus(nbr {
+    mid() max maxHoodPlus(nbr {
       x
     })
   }
@@ -214,6 +214,34 @@ class Main16 extends AggregateProgramSkeleton:
       }
 
 object Demo16 extends Simulation[Main16]
+
+class Main16stretches extends AggregateProgramSkeleton:
+  override def main() = rep(Double.MaxValue):
+    d =>
+      mux[Double](sense1) {
+        0.0
+      } {
+        minHoodPlus(nbr {
+          d
+        } + nbrRange * mux[Double](sense2) {
+          5
+        } {
+          1
+        })
+      }
+
+object Demo16stretches extends Simulation[Main16stretches]
+
+class Main16partition extends AggregateProgramSkeleton with BlockP:
+
+  override def main() = partition(sense1)(0.0)(_ + nbrRange)
+
+object Demo16partition extends Simulation[Main16partition]
+
+class Main16Gradient extends AggregateProgramSkeleton with BlockB:
+  override def main() = broadcast[Double](sense1)(0.0)(Double.PositiveInfinity)(0.0)(_ + nbrRange)((other, current) => (other, other))
+
+object Demo16Gradient extends Simulation[Main16Gradient]
 
 class Main17 extends AggregateProgramSkeleton with BlockG:
   override def main() = gradientCast(source = sense1)(center = false)(accumulation = sense2 | _)
